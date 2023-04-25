@@ -1,5 +1,5 @@
-# dropzone
+# next-dropzone-sample
 
-![screenshot](https://user-images.githubusercontent.com/3516343/232421426-f454e36d-ab69-470c-b7eb-d9e2a5215102.png)
+![screenshot](https://user-images.githubusercontent.com/3516343/234210033-e81c9e1b-1b21-4924-934a-0ca17e78c15b.png)
 
-next.js でファイルをドロップしてアップロードできる UI のサンプルです。
+next.js でファイルやフォルダをドロップできる UI コンポーネントの実装サンプルです。
