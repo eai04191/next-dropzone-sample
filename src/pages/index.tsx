@@ -22,14 +22,14 @@ export default function Home() {
                     <button
                         className="rounded bg-gray-100 p-2 px-6"
                         onClick={handleAddColumn}
-                        aria-label="Add column"
+                        aria-label="カラムを追加"
                     >
                         +
                     </button>
                     <button
                         className="rounded bg-gray-100 p-2 px-6"
                         onClick={handleRemoveColumn}
-                        aria-label="Remove column"
+                        aria-label="カラムを削除"
                     >
                         -
                     </button>

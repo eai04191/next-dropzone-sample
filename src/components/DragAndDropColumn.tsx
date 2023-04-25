@@ -4,12 +4,12 @@ import { useState } from "react";
 import { FileWithRelativePath, useDragAndDrop } from "@/hooks/useDragAndDrop";
 
 export function DragAndDropColumn({ title }: { title: string }) {
-    const [uploadedFiles, setUploadedFiles] = useState<FileWithRelativePath[]>(
+    const [droppedFiles, setDroppedFiles] = useState<FileWithRelativePath[]>(
         []
     );
 
     function onDrop(files: FileWithRelativePath[]) {
-        setUploadedFiles((prev) => [...prev, ...files]);
+        setDroppedFiles((prev) => [...prev, ...files]);
     }
 
     const {
@@ -20,8 +20,8 @@ export function DragAndDropColumn({ title }: { title: string }) {
         handleDrop,
     } = useDragAndDrop(onDrop);
 
-    function handleClearUploadedFiles() {
-        setUploadedFiles([]);
+    function handleClearDroppedFiles() {
+        setDroppedFiles([]);
     }
 
     return (
@@ -45,14 +45,14 @@ export function DragAndDropColumn({ title }: { title: string }) {
                     <h2 className="text-2xl font-semibold">{title}</h2>
                     <button
                         className="rounded bg-gray-200 p-1 px-2"
-                        onClick={handleClearUploadedFiles}
-                        aria-label="Clear uploaded files"
+                        onClick={handleClearDroppedFiles}
+                        aria-label="ドロップされたファイルをクリア"
                     >
                         X
                     </button>
                 </div>
                 <ul className="flex list-outside list-decimal flex-col gap-1 ps-7">
-                    {uploadedFiles.map((fileWithRelativePath) => (
+                    {droppedFiles.map((fileWithRelativePath) => (
                         <li key={fileWithRelativePath.relativePath}>
                             {fileWithRelativePath.relativePath}
                             {/* Fileなのでサムネイル表示などもできるはず */}
