@@ -1,9 +1,78 @@
 import clsx from "clsx";
 import { useState } from "react";
 
+type FileWithRelativePath = {
+    file: File;
+    /**
+     * File.webkitRelativePathとほぼ同じだが、それはgetterしかなく再定義できないので別のプロパティで定義する
+     */
+    relativePath: string;
+};
+
+/**
+ * FileSystemEntryがFileSystemDirectoryEntryであるかを判定する型ガード
+ */
+function isFileSystemDirectoryEntry(
+    entry: FileSystemEntry | null
+): entry is FileSystemDirectoryEntry {
+    return entry?.isDirectory === true;
+}
+
+/**
+ * FileSystemEntryがFileSystemFileEntryであるかを判定する型ガード
+ */
+function isFileSystemFileEntry(
+    entry: FileSystemEntry | null
+): entry is FileSystemFileEntry {
+    return entry?.isFile === true;
+}
+
 function Row({ title }: { title: string }) {
     const [isDragging, setIsDragging] = useState(false);
-    const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+    const [uploadedFiles, setUploadedFiles] = useState<FileWithRelativePath[]>(
+        []
+    );
+
+    /**
+     * FileSystemDirectoryEntryからディレクトリ構造を再帰的に読み込む
+     */
+    async function traverseDirectory(
+        entry: FileSystemDirectoryEntry
+    ): Promise<FileWithRelativePath[]> {
+        if (!isFileSystemDirectoryEntry(entry)) {
+            throw new Error("entry must be directory");
+        }
+
+        const result: FileWithRelativePath[] = [];
+
+        async function getEntries(dirEntry: FileSystemDirectoryEntry) {
+            return new Promise<FileSystemEntry[]>((resolve) =>
+                dirEntry.createReader().readEntries(resolve)
+            );
+        }
+        async function getFile(fileEntry: FileSystemFileEntry) {
+            return new Promise<File>((resolve) => fileEntry.file(resolve));
+        }
+
+        async function readEntries(
+            dirEntry: FileSystemDirectoryEntry
+        ): Promise<void> {
+            const entries = await getEntries(dirEntry);
+
+            for (const entry of entries) {
+                if (isFileSystemFileEntry(entry)) {
+                    const file = await getFile(entry);
+                    result.push({ file, relativePath: entry.fullPath });
+                } else if (isFileSystemDirectoryEntry(entry)) {
+                    await readEntries(entry);
+                }
+            }
+        }
+
+        await readEntries(entry);
+
+        return result;
+    }
 
     function handleDragEnter() {
         setIsDragging(true);
@@ -14,15 +83,28 @@ function Row({ title }: { title: string }) {
     function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
         e.preventDefault();
     }
-    function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+    async function handleDrop(e: React.DragEvent<HTMLDivElement>) {
         // 新しいタブを開くのを防ぐ
         e.preventDefault();
-
-        const files = Array.from(e.dataTransfer.files);
-        setUploadedFiles(files);
-
-        // debugger;
         setIsDragging(false);
+
+        const files: FileWithRelativePath[] = [];
+        const items = Array.from(e.dataTransfer.items);
+
+        for (const item of items) {
+            if (item.kind !== "file") continue;
+            const entry = item.webkitGetAsEntry();
+            if (isFileSystemDirectoryEntry(entry)) {
+                const directoryFiles = await traverseDirectory(entry);
+                files.push(...directoryFiles);
+            } else {
+                const file = item.getAsFile();
+                if (!file) continue;
+                files.push({ file, relativePath: file.name });
+            }
+        }
+
+        setUploadedFiles(files);
     }
 
     function handleClearItems() {
@@ -56,8 +138,22 @@ function Row({ title }: { title: string }) {
                     </button>
                 </div>
                 <ul className="flex list-outside list-decimal flex-col gap-1 ps-7">
-                    {uploadedFiles.map((file) => (
-                        <li key={file.name}>{file.name}</li>
+                    {uploadedFiles.map((fileWithRelativePath) => (
+                        <li key={fileWithRelativePath.relativePath}>
+                            {fileWithRelativePath.relativePath}
+                            {/* Fileなのでサムネイル表示などもできるはず */}
+                            {fileWithRelativePath.file.type ===
+                                "image/jpeg" && (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                    src={URL.createObjectURL(
+                                        fileWithRelativePath.file
+                                    )}
+                                    alt={fileWithRelativePath.relativePath}
+                                    className="h-20 w-20 rounded object-cover"
+                                />
+                            )}
+                        </li>
                     ))}
                 </ul>
             </div>
