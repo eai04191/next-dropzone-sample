@@ -11,6 +11,12 @@ export type FileWithRelativePath = {
     relativePath: string;
 };
 
+/**
+ * ファイルをドラッグアンドドロップで読み込むためのフック
+ *
+ * @param onDrop - ドロップされたファイルを受け取るコールバック
+ * @returns ドラッグアンドドロップの状態とイベントハンドラ
+ */
 export function useDragAndDrop(
     onDrop: (files: FileWithRelativePath[]) => void
 ) {
@@ -40,8 +46,14 @@ export function useDragAndDrop(
             if (item.kind !== "file") continue;
             const entry = item.webkitGetAsEntry();
             if (isFileSystemDirectoryEntry(entry)) {
-                const directoryFiles = await traverseDirectory(entry);
-                files.push(...directoryFiles);
+                try {
+                    const directoryFiles = await traverseDirectory(entry);
+                    files.push(...directoryFiles);
+                } catch (error) {
+                    alert(
+                        `Error occurred while reading ${entry.fullPath}: ${error}`
+                    );
+                }
             } else {
                 const file = item.getAsFile();
                 if (!file) continue;
