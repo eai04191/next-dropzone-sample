@@ -46,10 +46,21 @@ function Row({ title }: { title: string }) {
         const result: FileWithRelativePath[] = [];
 
         async function getEntries(dirEntry: FileSystemDirectoryEntry) {
-            return new Promise<FileSystemEntry[]>((resolve) =>
-                dirEntry.createReader().readEntries(resolve)
-            );
+            const entries: FileSystemEntry[] = [];
+            const reader = dirEntry.createReader();
+
+            // readEntriesは100件ずつしか取得できないので、全部取得するまで繰り返す
+            while (true) {
+                const batch = await new Promise<FileSystemEntry[]>((resolve) =>
+                    reader.readEntries(resolve)
+                );
+                if (batch.length === 0) break;
+                entries.push(...batch);
+            }
+
+            return entries;
         }
+
         async function getFile(fileEntry: FileSystemFileEntry) {
             return new Promise<File>((resolve) => fileEntry.file(resolve));
         }
