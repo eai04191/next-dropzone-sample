@@ -27,7 +27,7 @@ function isFileSystemFileEntry(
     return entry?.isFile === true;
 }
 
-function Row({ title }: { title: string }) {
+function Column({ title }: { title: string }) {
     const [isDragging, setIsDragging] = useState(false);
     const [uploadedFiles, setUploadedFiles] = useState<FileWithRelativePath[]>(
         []
@@ -188,14 +188,14 @@ function Row({ title }: { title: string }) {
 }
 
 export default function Home() {
-    const [rowCount, setRowCount] = useState(5);
+    const [columnCount, setColumnCount] = useState(5);
 
-    function handleAddRow() {
-        setRowCount(rowCount + 1);
+    function handleAddColumn() {
+        setColumnCount(columnCount + 1);
     }
-    function handleRemoveRow() {
-        if (rowCount === 0) return;
-        setRowCount(rowCount - 1);
+    function handleRemoveColumn() {
+        if (columnCount === 0) return;
+        setColumnCount(columnCount - 1);
     }
 
     return (
@@ -203,16 +203,18 @@ export default function Home() {
             <div className="flex w-full items-center justify-between gap-3">
                 <h1 className="text-2xl font-bold">dropzone</h1>
                 <div className="flex items-center gap-3">
-                    <span>Row Count: </span>
+                    <span>Column Count: </span>
                     <button
                         className="rounded bg-gray-100 p-2 px-6"
-                        onClick={handleAddRow}
+                        onClick={handleAddColumn}
+                        aria-label="Add column"
                     >
                         +
                     </button>
                     <button
                         className="rounded bg-gray-100 p-2 px-6"
-                        onClick={handleRemoveRow}
+                        onClick={handleRemoveColumn}
+                        aria-label="Remove column"
                     >
                         -
                     </button>
@@ -220,8 +222,8 @@ export default function Home() {
             </div>
 
             <div className="grid h-full w-full flex-1 auto-cols-fr grid-flow-col items-stretch gap-4">
-                {[...Array(rowCount)].map((_, i) => (
-                    <Row key={i} title={`Row ${i + 1}`} />
+                {[...Array(columnCount)].map((_, i) => (
+                    <Column key={i} title={`Column ${i + 1}`} />
                 ))}
             </div>
         </main>
