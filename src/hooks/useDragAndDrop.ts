@@ -39,29 +39,30 @@ export function useDragAndDrop(
         e.preventDefault();
         setIsDragging(false);
 
-        const files: FileWithRelativePath[] = [];
-        const items = Array.from(e.dataTransfer.items);
+        const queue: Promise<FileWithRelativePath[]>[] = [];
 
-        for (const item of items) {
+        for (const item of e.dataTransfer.items) {
             if (item.kind !== "file") continue;
             const entry = item.webkitGetAsEntry();
             if (isFileSystemDirectoryEntry(entry)) {
-                try {
-                    const directoryFiles = await traverseDirectory(entry);
-                    files.push(...directoryFiles);
-                } catch (error) {
-                    alert(
-                        `Error occurred while reading ${entry.fullPath}: ${error}`
-                    );
-                }
+                // DataTransfer.itemsの処理中に非同期操作を待つとitemsが失われることがあるので、queueに追加してあとで処理する
+                // https://stackoverflow.com/a/59249292
+                queue.push(traverseDirectory(entry));
             } else {
                 const file = item.getAsFile();
                 if (!file) continue;
-                files.push({ file, relativePath: file.name });
+                queue.push(
+                    Promise.resolve([{ file, relativePath: file.name }])
+                );
             }
         }
 
-        onDrop(files);
+        try {
+            const files = (await Promise.all(queue)).flat();
+            onDrop(files);
+        } catch (error) {
+            alert(`Error occurred while reading files: ${error}`);
+        }
     }
 
     return {
